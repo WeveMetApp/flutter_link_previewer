@@ -14,7 +14,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_chat_types:
-   path: flutter_chat_types
+   path: ../flutter_chat_types
     # git:
     #   url: https://github.com/sajadmaster/flutter_chat_types
   flutter_linkify: ^5.0.2
