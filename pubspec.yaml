@@ -15,7 +15,9 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_chat_types:
-    path: ../flutter_chat_types
+    git:
+      url: https://github.com/WeveMetApp/flutter_chat_types.git
+      ref: main
   flutter_linkify: ^5.0.2
   html: ^0.15.0
   http: ^0.13.4
