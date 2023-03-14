@@ -4,7 +4,6 @@ description: >
   basic customization and ability to render from cached data.
 version: 3.0.1
 homepage: https://flyer.chat
-repository: https://github.com/flyerhq/flutter_link_previewer
 publish_to: none
 
 environment:
