@@ -15,6 +15,8 @@ class LinkPreview extends StatefulWidget {
   const LinkPreview({
     super.key,
     this.animationDuration,
+    this.borderRadius,
+    this.color,
     this.corsProxy,
     this.enableAnimation = false,
     this.header,
@@ -22,6 +24,7 @@ class LinkPreview extends StatefulWidget {
     this.hideImage,
     this.imageBuilder,
     this.linkStyle,
+    this.margin,
     this.metadataTextStyle,
     this.metadataTitleStyle,
     this.onLinkPressed,
@@ -39,6 +42,12 @@ class LinkPreview extends StatefulWidget {
 
   /// Expand animation duration.
   final Duration? animationDuration;
+
+  /// Border radius of preview.
+  final BorderRadius? borderRadius;
+
+  /// Background color of preview.
+  final Color? color;
 
   /// CORS proxy to make more previews work on web. Not tested.
   final String? corsProxy;
@@ -60,6 +69,9 @@ class LinkPreview extends StatefulWidget {
 
   /// Style of highlighted links in the text.
   final TextStyle? linkStyle;
+
+  /// Margin around preview.
+  final EdgeInsets? margin;
 
   /// Style of preview's description.
   final TextStyle? metadataTextStyle;
@@ -173,7 +185,6 @@ class _LinkPreviewState extends State<LinkPreview> with SingleTickerProviderStat
       return _containerWidget(
         animate: shouldAnimate,
         child: aspectRatio == 1 ? _minimizedBodyWidget(previewData) : _bodyWidget(previewData, width),
-        withPadding: aspectRatio == 1,
       );
     } else {
       return _containerWidget(animate: false);
@@ -188,6 +199,8 @@ class _LinkPreviewState extends State<LinkPreview> with SingleTickerProviderStat
       );
 
   Widget _bodyWidget(PreviewData data, double width) {
+    final color = widget.color ?? Colors.white70;
+    final margin = widget.margin ?? EdgeInsets.zero;
     final padding = widget.padding ??
         const EdgeInsets.only(
           bottom: 16,
@@ -199,55 +212,42 @@ class _LinkPreviewState extends State<LinkPreview> with SingleTickerProviderStat
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         GestureDetector(
-          onTap: widget.openOnPreviewTitleTap ? () => _onOpen(data.link!) : null,
+          onTap: () => _onOpen(data.link!),
           child: Container(
-            padding: EdgeInsets.only(
-              bottom: padding.bottom,
-              left: padding.left,
-              right: padding.right,
+            decoration: BoxDecoration(
+              borderRadius: widget.borderRadius,
+              color: color,
             ),
+            margin: margin,
+            padding: padding,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 if (data.title != null) _titleWidget(data.title!),
                 if (data.description != null) _descriptionWidget(data.description!),
+                if (data.image?.url != null && widget.hideImage != true)
+                  _imageWidget(data.image!.url, data.link!, width),
               ],
             ),
           ),
         ),
-        if (data.image?.url != null && widget.hideImage != true) _imageWidget(data.image!.url, data.link!, width),
       ],
     );
   }
 
   Widget _containerWidget({
     required bool animate,
-    bool withPadding = false,
     Widget? child,
   }) {
-    final padding = widget.padding ??
-        const EdgeInsets.symmetric(
-          horizontal: 24,
-          vertical: 16,
-        );
-
     final shouldAnimate = widget.enableAnimation == true && animate;
 
     return Container(
       constraints: BoxConstraints(maxWidth: widget.width),
-      padding: withPadding ? padding : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: withPadding
-                ? EdgeInsets.zero
-                : EdgeInsets.only(
-                    left: padding.left,
-                    right: padding.right,
-                    top: padding.top,
-                    bottom: _hasOnlyImage() ? 0 : 16,
-                  ),
+            padding: EdgeInsets.zero,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -262,11 +262,10 @@ class _LinkPreviewState extends State<LinkPreview> with SingleTickerProviderStat
                     ),
                   ),
                 widget.textWidget ?? _linkify(),
-                if (withPadding && child != null) shouldAnimate ? _animated(child) : child,
+                if (child != null) shouldAnimate ? _animated(child) : child,
               ],
             ),
           ),
-          if (!withPadding && child != null) shouldAnimate ? _animated(child) : child,
         ],
       ),
     );
@@ -318,7 +317,7 @@ class _LinkPreviewState extends State<LinkPreview> with SingleTickerProviderStat
       widget.previewData?.image?.url != null;
 
   Widget _imageWidget(String imageUrl, String linkUrl, double width) => GestureDetector(
-        onTap: widget.openOnPreviewImageTap ? () => _onOpen(linkUrl) : null,
+        onTap: () => _onOpen(linkUrl),
         child: Container(
           constraints: BoxConstraints(
             maxHeight: width,
@@ -348,37 +347,53 @@ class _LinkPreviewState extends State<LinkPreview> with SingleTickerProviderStat
         style: widget.textStyle,
       );
 
-  Widget _minimizedBodyWidget(PreviewData data) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (data.title != null || data.description != null)
-            Container(
-              margin: const EdgeInsets.only(top: 16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: widget.openOnPreviewTitleTap ? () => _onOpen(data.link!) : null,
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 4),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            if (data.title != null) _titleWidget(data.title!),
-                            if (data.description != null) _descriptionWidget(data.description!),
-                          ],
-                        ),
+  Widget _minimizedBodyWidget(PreviewData data) {
+    final color = widget.color ?? Colors.white70;
+    final margin = widget.margin ?? EdgeInsets.zero;
+    final padding = widget.padding ??
+        const EdgeInsets.only(
+          bottom: 16,
+          left: 24,
+          right: 24,
+        );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (data.title != null || data.description != null)
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: widget.borderRadius,
+              color: color,
+            ),
+            margin: margin,
+            padding: padding,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Expanded(
+                  child: GestureDetector(
+                    onTap: widget.openOnPreviewTitleTap ? () => _onOpen(data.link!) : null,
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          if (data.title != null) _titleWidget(data.title!),
+                          if (data.description != null) _descriptionWidget(data.description!),
+                        ],
                       ),
                     ),
                   ),
-                  if (data.image?.url != null && widget.hideImage != true)
-                    _minimizedImageWidget(data.image!.url, data.link!),
-                ],
-              ),
+                ),
+                if (data.image?.url != null && widget.hideImage != true)
+                  _minimizedImageWidget(data.image!.url, data.link!),
+              ],
             ),
-        ],
-      );
+          ),
+      ],
+    );
+  }
 
   Widget _minimizedImageWidget(String imageUrl, String linkUrl) => ClipRRect(
         borderRadius: const BorderRadius.all(
