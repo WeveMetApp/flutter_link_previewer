@@ -23,6 +23,7 @@ class LinkPreview extends StatefulWidget {
     this.headerStyle,
     this.hideImage,
     this.imageBuilder,
+    required this.isSender,
     this.linkStyle,
     this.margin,
     this.metadataTextStyle,
@@ -66,6 +67,9 @@ class LinkPreview extends StatefulWidget {
 
   /// Function that allows you to build a custom image.
   final Widget Function(String)? imageBuilder;
+
+  /// Current user is sender.
+  final bool isSender;
 
   /// Style of highlighted links in the text.
   final TextStyle? linkStyle;
@@ -244,28 +248,20 @@ class _LinkPreviewState extends State<LinkPreview> with SingleTickerProviderStat
     return Container(
       constraints: BoxConstraints(maxWidth: widget.width),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: widget.isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: EdgeInsets.zero,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (widget.header != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Text(
-                      widget.header!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: widget.headerStyle,
-                    ),
-                  ),
-                widget.textWidget ?? _linkify(),
-                if (child != null) shouldAnimate ? _animated(child) : child,
-              ],
+          if (widget.header != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Text(
+                widget.header!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: widget.headerStyle,
+              ),
             ),
-          ),
+          widget.textWidget ?? _linkify(),
+          if (child != null) shouldAnimate ? _animated(child) : child,
         ],
       ),
     );
