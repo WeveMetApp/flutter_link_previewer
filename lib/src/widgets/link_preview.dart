@@ -307,11 +307,6 @@ class _LinkPreviewState extends State<LinkPreview> with SingleTickerProviderStat
   bool _hasData(PreviewData? previewData) =>
       previewData?.title != null || previewData?.description != null || previewData?.image?.url != null;
 
-  bool _hasOnlyImage() =>
-      widget.previewData?.title == null &&
-      widget.previewData?.description == null &&
-      widget.previewData?.image?.url != null;
-
   Widget _imageWidget(String imageUrl, String linkUrl, double width) => GestureDetector(
         onTap: () => _onOpen(linkUrl),
         child: Container(
@@ -357,19 +352,19 @@ class _LinkPreviewState extends State<LinkPreview> with SingleTickerProviderStat
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (data.title != null || data.description != null)
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: widget.borderRadius,
-              color: color,
-            ),
-            margin: margin,
-            padding: padding,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Expanded(
-                  child: GestureDetector(
-                    onTap: widget.openOnPreviewTitleTap ? () => _onOpen(data.link!) : null,
+          GestureDetector(
+            onTap: () => _onOpen(data.link!),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: widget.borderRadius,
+                color: color,
+              ),
+              margin: margin,
+              padding: padding,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Expanded(
                     child: Container(
                       margin: const EdgeInsets.only(right: 4),
                       child: Column(
@@ -381,27 +376,23 @@ class _LinkPreviewState extends State<LinkPreview> with SingleTickerProviderStat
                       ),
                     ),
                   ),
-                ),
-                if (data.image?.url != null && widget.hideImage != true)
-                  _minimizedImageWidget(data.image!.url, data.link!),
-              ],
+                  if (data.image?.url != null && widget.hideImage != true) _minimizedImageWidget(data.image!.url),
+                ],
+              ),
             ),
           ),
       ],
     );
   }
 
-  Widget _minimizedImageWidget(String imageUrl, String linkUrl) => ClipRRect(
+  Widget _minimizedImageWidget(String imageUrl) => ClipRRect(
         borderRadius: const BorderRadius.all(
           Radius.circular(12),
         ),
-        child: GestureDetector(
-          onTap: widget.openOnPreviewImageTap ? () => _onOpen(linkUrl) : null,
-          child: SizedBox(
-            height: 48,
-            width: 48,
-            child: widget.imageBuilder != null ? widget.imageBuilder!(imageUrl) : Image.network(imageUrl),
-          ),
+        child: SizedBox(
+          height: 48,
+          width: 48,
+          child: widget.imageBuilder != null ? widget.imageBuilder!(imageUrl) : Image.network(imageUrl),
         ),
       );
 

@@ -2,8 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart' hide Element;
-import 'package:flutter_chat_types/flutter_chat_types.dart'
-    show PreviewData, PreviewDataImage;
+import 'package:flutter_chat_types/flutter_chat_types.dart' show PreviewData, PreviewDataImage;
 import 'package:html/dom.dart' show Document, Element;
 import 'package:html/parser.dart' as parser show parse;
 import 'package:http/http.dart' as http show get;
@@ -61,9 +60,7 @@ List<String> _getImageUrls(Document document, String baseUrl) {
   var attribute = 'content';
   var elements = meta
       .where(
-        (e) =>
-            e.attributes['property'] == 'og:image' ||
-            e.attributes['property'] == 'twitter:image',
+        (e) => e.attributes['property'] == 'og:image' || e.attributes['property'] == 'twitter:image',
       )
       .toList();
 
@@ -78,9 +75,7 @@ List<String> _getImageUrls(Document document, String baseUrl) {
       element.attributes[attribute]?.trim(),
     );
 
-    return actualImageUrl != null
-        ? [...previousValue, actualImageUrl]
-        : previousValue;
+    return actualImageUrl != null ? [...previousValue, actualImageUrl] : previousValue;
   });
 }
 
@@ -145,8 +140,13 @@ Future<String> _getBiggestImageUrl(
   var currentArea = 0.0;
 
   await Future.forEach(imageUrls, (String url) async {
-    final size = await _getImageSize(_calculateUrl(url, proxy));
-    final area = size.width * size.height;
+    double area;
+    try {
+      final size = await _getImageSize(_calculateUrl(url, proxy));
+      area = size.width * size.height;
+    } catch (e) {
+      area = 0.0;
+    }
     if (area > currentArea) {
       currentArea = area;
       currentUrl = _calculateUrl(url, proxy);
@@ -193,8 +193,7 @@ Future<PreviewData> getPreviewData(
     }
     previewDataUrl = _calculateUrl(url, proxy);
     final uri = Uri.parse(previewDataUrl);
-    final response = await http
-        .get(uri, headers: {if (userAgent != null) 'User-Agent': userAgent});
+    final response = await http.get(uri, headers: {if (userAgent != null) 'User-Agent': userAgent});
     final document = parser.parse(utf8.decode(response.bodyBytes));
 
     final imageRegexp = RegExp(regexImageContentType);
@@ -232,16 +231,17 @@ Future<PreviewData> getPreviewData(
     String imageUrl;
 
     if (imageUrls.isNotEmpty) {
-      imageUrl = imageUrls.length == 1
-          ? _calculateUrl(imageUrls[0], proxy)
-          : await _getBiggestImageUrl(imageUrls, proxy);
+      imageUrl =
+          imageUrls.length == 1 ? _calculateUrl(imageUrls[0], proxy) : await _getBiggestImageUrl(imageUrls, proxy);
 
       imageSize = await _getImageSize(imageUrl);
-      previewDataImage = PreviewDataImage(
-        height: imageSize.height,
-        url: imageUrl,
-        width: imageSize.width,
-      );
+      if (imageSize.width >= 50 && imageSize.height >= 50) {
+        previewDataImage = PreviewDataImage(
+          height: imageSize.height,
+          url: imageUrl,
+          width: imageSize.width,
+        );
+      }
     }
     return PreviewData(
       description: previewDataDescription,
@@ -266,5 +266,4 @@ const regexEmail = r'([a-zA-Z0-9+._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)';
 const regexImageContentType = r'image\/*';
 
 /// Regex to find all links in the text.
-const regexLink =
-    r'((http|ftp|https):\/\/)?([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?';
+const regexLink = r'((http|ftp|https):\/\/)?([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?';
